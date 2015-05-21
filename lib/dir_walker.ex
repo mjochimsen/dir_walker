@@ -91,31 +91,23 @@ defmodule DirWalker do
   end
 
 
-  # If the first element is a list, then it represents a 
-  # nested directory listing. We keep it as a list rather
-  # than flatten it in order to keep performance up.
+  # If our count is zero, then we've pulled all the paths we need.
+  defp first_n(path_list, 0, _mappers, result), do: {Enum.reverse(result), path_list}
 
-  defp first_n([ [] | rest ], n, mappers, result)  do
-    first_n(rest, n, mappers, result)
-  end
-      
-  defp first_n([ [first] | rest ], n, mappers, result)  do
-    first_n([ first | rest ], n, mappers, result)
-  end
-      
-  defp first_n([ [first | nested] | rest ], n, mappers, result)  do
-    first_n([ first | [ nested | rest ] ], n, mappers, result)
+  # If our pathname list is empty, we're done.
+  defp first_n([], _n, _mappers, result),       do: {Enum.reverse(result), []}
+
+  # If the first element is a function, then it represents an unvisited
+  # subdirectory. Visit it and add the entries to the list of paths.
+  defp first_n([ dirfn | rest], n, mappers, result) when is_function(dirfn) do
+    first_n(dirfn.() ++ rest, n, mappers, result)
   end
 
   # Otherwise just a path as the first entry
-
-  defp first_n(path_list, 0, _mappers, result), do: {result, path_list}
-  defp first_n([], _n, _mappers, result),       do: {result, []}
-
   defp first_n([ path | rest ], n, mappers, result) do
     stat = File.stat!(path)
     if stat.type == :directory do
-      rest = [files_in(path) | rest]
+      rest = [get_files_for(path) | rest]
     end
     if mappers.filter.(path, stat) do
       first_n(rest, n-1, mappers, [ mappers.include_stat.(path, stat) | result ])
@@ -124,19 +116,20 @@ defmodule DirWalker do
     end
   end
 
-  defp files_in(path) do
-    path
-    |> :file.list_dir
-    |> ignore_error(path)
-    |> Enum.map(fn(rel) -> Path.join(path, rel) end)
+  defp get_files_for(path) do
+    fn -> path
+          |> :file.list_dir
+          |> ignore_error(path)
+          |> Enum.map(fn(rel) -> Path.join(path, rel) end)
+    end
   end
 
-  def ignore_error({:error, type}, path) do
+  defp ignore_error({:error, type}, path) do
     Logger.info("Ignore folder #{path} (#{type})")
     []
   end
 
-  def ignore_error({:ok, list}, _path), do: list
+  defp ignore_error({:ok, list}, _path), do: list
 
 
   defp setup_mappers(opts) do

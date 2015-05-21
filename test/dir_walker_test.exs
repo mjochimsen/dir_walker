@@ -5,7 +5,7 @@ defmodule DirWalkerTest do
     {:ok, walker} = DirWalker.start_link("test/dir")
     files = DirWalker.next(walker, 99)
     assert length(files) == 3
-    assert files == [ "test/dir/c/d/f.txt", "test/dir/b.txt", "test/dir/a.txt" ]
+    assert files == [ "test/dir/a.txt", "test/dir/b.txt", "test/dir/c/d/f.txt" ]
   end                 
 
 
@@ -53,7 +53,7 @@ defmodule DirWalkerTest do
     {:ok, walker} = DirWalker.start_link("test/dir/c/d", include_dir_names: true)
     files = DirWalker.next(walker, 99)
     assert length(files) == 2
-    assert  ["test/dir/c/d/f.txt", "test/dir/c/d"] = files
+    assert  ["test/dir/c/d", "test/dir/c/d/f.txt"] = files
   end
 
   test "directory names can be pulled one at a time" do
@@ -69,10 +69,10 @@ defmodule DirWalkerTest do
                                          include_dir_names: true)
     files = DirWalker.next(walker, 99)
     assert length(files) == 2
-    assert  [{"test/dir/c/d/f.txt", s1 = %File.Stat{}}, 
-             {"test/dir/c/d",       s3 = %File.Stat{}}] = files
-    assert s1.type == :regular
-    assert s3.type == :directory
+    assert  [{"test/dir/c/d",       s1 = %File.Stat{}},
+             {"test/dir/c/d/f.txt", s3 = %File.Stat{}}] = files
+    assert s1.type == :directory
+    assert s3.type == :regular
   end
 
   test "stop method works" do 
