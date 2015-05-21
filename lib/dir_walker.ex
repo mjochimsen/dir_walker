@@ -6,7 +6,7 @@ defmodule DirWalker do
 
   use GenServer
 
-  def start_link(paths, opts \\ [])
+  def start_link(path, opts \\ [])
 
   def start_link(list_of_paths, opts) when is_list(list_of_paths) do
     mappers = setup_mappers(opts)
@@ -57,9 +57,9 @@ defmodule DirWalker do
 
   """
 
-  def stream(path_list) do
+  def stream(path_list, opts \\ []) do
     Stream.resource( fn -> 
-                      {:ok, dirw} = DirWalker.start_link(path_list) 
+                      {:ok, dirw} = DirWalker.start_link(path_list, opts)
                       dirw
                     end ,
                     fn(dirw) -> 
