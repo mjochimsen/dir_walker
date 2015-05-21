@@ -77,4 +77,24 @@ defmodule DirWalkerTest do
      assert Enum.sort(files) == Enum.sort(paths)
   end 
 
+  test "stream method accepts :include_stat option" do
+    dirw = DirWalker.stream("test/dir", include_stat: true)
+    assert [file] = Enum.take(dirw, 1)
+    assert {"test/dir/a.txt", %File.Stat{}} = file
+  end
+
+  test "stream method accepts :include_dir_names option" do
+    dirw = DirWalker.stream("test/dir/c/d", include_dir_names: true)
+    paths = Enum.take(dirw, 99)
+    assert length(paths) == 2
+    assert ["test/dir/c/d/f.txt", "test/dir/c/d"] == paths
+  end
+
+  test "stream method accepts :matching option" do
+    dirw = DirWalker.stream("test/dir", matching: ~r(a|f))
+    paths = Enum.take(dirw, 99)
+    assert length(paths) == 2
+    assert ["test/dir/a.txt", "test/dir/c/d/f.txt"] == paths
+  end
+
 end
