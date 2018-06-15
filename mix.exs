@@ -3,33 +3,21 @@ defmodule DirWalker.Mixfile do
 
   @moduledoc """
   DirWalker lazily traverses one or more directory trees, depth first, 
-  returning successive file names.
+  returning successive file names. Provides both a `next()` and
+  a Stream-based API.
 
-  Initialize the walker using
-
-      {:ok, walker} = DirWalker.start_link(path) # or [path, path...]
-
-  Then return the next `n` path names using
-
-      paths = DirWalker.next(walker <, n \\ 1>)
-
-  Successive calls to `next` will return successive file names, until
-  all file names have been returned. 
-
-  These methods have also been wrapped into a Stream resource. 
-
-       paths = DirWalker.stream(path) # or [path,path...]
-
+  Directory names may optionally be returned. The File.Stat structure
+  associated with the file name may also optionally be returned.
   """
 
   def project do
     [
       app:         :dir_walker,
-      version:     "0.0.6",
-      elixir:      ">= 1.0.0",
-      deps:        [],
+      version:     "0.0.7",
+      elixir:      ">= 1.5.0",
+      deps:        [{:ex_doc, ">= 0.0.0", only: :dev}],
       description: @moduledoc,
-      package:     package
+      package:     package()
     ]
   end
 
@@ -39,9 +27,10 @@ defmodule DirWalker.Mixfile do
 
   defp package do
     [
-      files:        [ "lib", "priv", "mix.exs", "README.md" ],
-      contributors: [ "Dave Thomas <dave@pragprog.org>"],
+      files:        [ "lib", "mix.exs", "README.md" ],
+      maintainers:  [ "Dave Thomas <dave@pragprog.org>"],
       licenses:     [ "Same as Elixir" ],
+      
       links:        %{
                        "GitHub" => "https://github.com/pragdave/dir_walker",
                     }
